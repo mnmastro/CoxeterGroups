@@ -229,7 +229,7 @@ coxeterGroup (List, Matrix) := CoxeterGroup => o -> (S, m) -> (
     W := new CoxeterGroup from {
 	(symbol generators) => {},
         (symbol generatorSymbols) => S,
-	(symbol RelationMatrix) => m,
+	(symbol coxeterMatrix) => m,
         (symbol cache) => new CacheTable from {}
 	};
     
@@ -246,7 +246,7 @@ coxeterGroup (List, Matrix) := CoxeterGroup => o -> (S, m) -> (
 	   )
        );
    
-    --W ? W := (f,g) -> (leadNCMonomial f) ? (leadNCMonomial g);
+    W ? W := (w, v) -> normalForm w ? normalForm v;
 
     W == W := (w, v) -> normalForm w === normalForm v;
        
@@ -273,15 +273,15 @@ coxeterGroup Matrix := CoxeterGroup => o -> m -> (
     )
 
 coxeterGroup (List, DynkinDiagram) := CoxeterGroup => o -> (S, D) -> (
-    V := vertices D.graph;
+    V := vertices graph D;
     if #S =!= #V then (
 	error "coxeterGroup: Expected the Dynkin diagram to have as many vertices as the
 	list of generators."
 	);
-    E := set edges D.graph;
+    E := set edges graph D;
     m := matrix apply(V, u -> apply(V, v -> 
 	    if u == v then 1 
-	    else if (D.weights)#?(sort {u,v}) then (D.weights)#(sort {u,v})
+	    else if (weights D)#?(sort {u,v}) then (weights D)#(sort {u,v})
 	    else if E#?(set {u, v}) then 3
 	    else 2
 	    )
@@ -291,13 +291,12 @@ coxeterGroup (List, DynkinDiagram) := CoxeterGroup => o -> (S, D) -> (
 
 coxeterGroup DynkinDiagram := CoxeterGroup => o -> D -> (
     s := getSymbol o.Variable;
-    V := vertices D.graph;
+    V := vertices graph D;
     coxeterGroup(apply(#V, i -> s_i), D)
     ) 
 
 coxeterGroup Graph := CoxeterGroup => o -> G -> (
-    G' := complementGraph G;
-    coxeterGroup dynkinDiagram(G', apply((edges G')/toList/sort, e -> e => 0) ) 
+    coxeterGroup dynkinDiagram(G, apply((edges G)/toList/sort, e -> e => 0) ) 
     )
 
 coxeterGroup Subgroup := CoxeterGroup => o -> P -> (
@@ -306,9 +305,9 @@ coxeterGroup Subgroup := CoxeterGroup => o -> P -> (
     	W := group P;
     	D := dynkinDiagram W;
     	S := gens W;
-    	G := inducedSubgraph(D.graph, apply(P_*, s -> position(S, t -> t == s) ) );
+    	G := inducedSubgraph(graph D, apply(P_*, s -> position(S, t -> t == s) ) );
     	E := (edges G)/toList/sort;
-    	wgt := select(pairs D.weights, p -> (set E)#?(p_0)); 
+    	wgt := select(pairs weights D, p -> (set E)#?(p_0)); 
     	coxeterGroup(flatten apply(P_*, s -> normalForm s), dynkinDiagram(G, wgt) )
 	)
     )
@@ -328,7 +327,20 @@ net CoxeterGroup := W -> (
     )
 
 
+CoxeterGroup#{Standard,AfterPrint} = CoxeterGroup#{Standard,AfterNoPrint} = W -> (
+     << endl;				  -- double space
+     << concatenate(interpreterDepth:"o") << lineNumber << " : " << class W <<  
+     (if W.cache#?hasType then (
+	  horizontalJoin(" of type ", W.cache#hasType)
+	 ) else (" ") ) << endl;
+     )
+-- Magic code for having Macaulay2 print the types of specific Coxeter groups.
+
 -----------------------------------------------------------------
+
+coxeterMatrix = method()
+
+coxeterMatrix CoxeterGroup := Matrix => W -> W.coxeterMatrix
 
 generators CoxeterGroup := List => o -> W -> W.generators
 
@@ -341,6 +353,26 @@ id CoxeterGroup := W -> putInGroup({}, W);
 length GroupElement := ZZ => w -> w.length
 
 numgens CoxeterGroup := ZZ => W -> #(gens W)
+
+CoxeterGroup * CoxeterGroup := (W, W') -> (
+    D := dynkinDiagram W;
+    D' := dynkinDiagram W';
+    coxeterGroup(D + D')
+    )
+
+-----------------------------------------------------------------
+
+relations CoxeterGroup := List => W -> (
+    if W.cache#?(symbol relations) then W.cache#(symbol relations)
+    else (
+	m := coxeterMatrix W;
+	rels := select(apply(flatten apply(numgens W, i -> apply(i + 1, j -> {j, i})),
+		 p -> {p, m_(p#0)_(p#1)}), r -> last r > 0);
+	rels = apply(rels, r -> flatten apply(last r, t -> apply(first r, i -> W_i) ) );
+	W.cache#(symbol relations) = rels;
+	rels
+	)
+    )
 
 
 -----------------------------------------------------------------
@@ -375,10 +407,10 @@ isFiniteGroup CoxeterGroup := W -> (
 	)
     else (
 	D := dynkinDiagram W;
-	if not isForest D.graph then false
+	if not isForest graph D then false
 	else (
-	    cmps := apply(connectedComponents D.graph, 
-	    	C -> ( inducedSubgraph(D.graph, C), hashTable select(pairs D.weights, p -> isSubset(p_0, C) ) )
+	    cmps := apply(connectedComponents graph D, 
+	    	C -> ( inducedSubgraph(graph D, C), hashTable select(pairs weights D, p -> isSubset(p_0, C) ) )
 	    	);
 	    all(cmps, C -> (
 		    L := set leaves C_0;
@@ -494,7 +526,7 @@ cartanMatrix = method()
 cartanMatrix CoxeterGroup := Matrix => W -> (
     if W.cache#?(symbol cartanMatrix) then W.cache#(symbol cartanMatrix)
     else (
-    	m := entries W.RelationMatrix;
+    	m := entries coxeterMatrix W;
     	n := 2*lcm select(flatten m, e -> e > 0);
     	kk := cyclotomicField n;
     	z := first (coefficientRing kk)_*;
@@ -506,24 +538,34 @@ cartanMatrix CoxeterGroup := Matrix => W -> (
 
 
 -----------------------------------------------------------------
+
+reflectionRepresentatives = method()
+
+reflectionRepresentatives CoxeterGroup := List => W -> (
+    if W.cache#?reflectionRepresentatives then W.cache#reflectionRepresentatives
+    else (
+	A := cartanMatrix W;
+    	r := apply(numgens W, i -> id_(target A) - 2*(matrix apply(numRows A, 
+		    r -> apply(numColumns A, c -> if r == i then A_c_r else 0_(ring A) ) ) )
+	    ); 
+	W.cache#(symbol reflectionRepresentatives) = r;
+	r
+	)
+    ) 
+ 
  
 reflectionRep = method()
 
 reflectionRep CoxeterGroup := Matrix => W -> (
     if W.cache#?(symbol reflectionRep) then W.cache#(symbol reflectionRep)
     else (
-	A := cartanMatrix W;
-    	r := hashTable apply(numgens W, 
-	    i -> (gens W)#i => id_(target A) - 2*(matrix apply(numRows A, 
-		    r -> apply(numColumns A, c -> if r == i then A_c_r else 0_(ring A) ) ) )
-	    ); 
-	W.cache#(symbol reflectionRepresentatives) = r;
+    	r := hashTable apply(numgens W, i -> (gens W)#i => (reflectionRepresentatives W)#i );
 	rep := w -> (
-	    V := target A;
+	    V := target cartanMatrix W;
 	    if length w == 0 then id_V else (
 		word := flatten apply(if instance(w, List) then w else normalForm w, 
 		    t -> wordToGroup({t}, W) );
-	    	product apply(word, t -> (W.cache#(reflectionRepresentatives))#t)
+	    	product apply(word, t -> r#t)
 		)
 	    ); 
 	W.cache#(symbol reflectionRep) = rep;
@@ -584,12 +626,25 @@ reflections CoxeterGroup := List => W -> (
 -- DYNKIN DIAGRAMS
 -----------------------------------------------------------------
 
-net DynkinDiagram := D -> net (D.graph, D.weights)
+graph DynkinDiagram := Graph => o -> D -> D.graph
+
+weights = method()
+weights DynkinDiagram := Graph => D -> D.weights
+
+net DynkinDiagram := D -> net (graph D, weights D)
+
+DynkinDiagram + DynkinDiagram := (D, D') -> (
+    Dweights := apply(pairs weights D, (e, w) -> ({{e_0, 0}, {e_1, 0}}, w) );
+    D'weights := apply(pairs weights D', (e, w) -> ({{e_0, 1}, {e_1, 1}}, w) );
+    dynkinDiagram(disjointUnion {graph D, graph D'}, Dweights|D'weights)
+    )
+
+-----------------------------------------------------------------
 
 dynkinDiagram = method()
 
 dynkinDiagram (Graph, List) := DynkinDiagram => (G, w) -> (
-    D := new DynkinDiagram from {
+    D := new DynkinDiagram from hashTable {
 	(symbol graph) => G,
         (symbol weights) => hashTable w,
         (symbol cache) => new CacheTable from {}
@@ -600,9 +655,9 @@ dynkinDiagram (Graph, List) := DynkinDiagram => (G, w) -> (
 dynkinDiagram Graph := DynkinDiagram => G -> dynkinDiagram(G, {})
 
 dynkinDiagram CoxeterGroup := DynkinDiagram => W -> (
-    m := W.RelationMatrix;
+    m := coxeterMatrix W;
     V := toList(0..numgens W - 1);
-    G := graph(V, select(subsets(V, 2), e -> m_(e#0)_(e#1) >= 3 or m_(e#0)_(e#1) >= 0) );
+    G := graph(V, select(subsets(V, 2), e -> m_(e#0)_(e#1) >= 3 or m_(e#0)_(e#1) == 0) );
     w := apply(select(subsets(V, 2), e -> m_(e#0)_(e#1) >= 4 or m_(e#0)_(e#1) == 0), 
 	e -> e => m_(e#0)_(e#1) );
     dynkinDiagram(G, w)
@@ -723,6 +778,7 @@ specificCoxeterGroup String := CoxeterGroup => name -> (
 symmetricGroup = method()
 
 symmetricGroup ZZ := CoxeterGroup => n -> (
+    if n < 2 then error "symmetricGroup: Expected an integer greater than 1.";
     S := specificCoxeterGroup("A"|(toString (n - 1) ) );
     S.cache#(symbol permutationAction) = hashTable apply(numgens S, i -> S_i => l -> take(l, i)|{l#(i+1), l#i}|drop(l, i + 2) );
     S

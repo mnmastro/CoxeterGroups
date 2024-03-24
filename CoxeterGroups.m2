@@ -2,8 +2,8 @@
 
 newPackage(
         "CoxeterGroups",
-        Version => "0.1", 
-        Date => "July 15, 2023",
+        Version => "0.3", 
+        Date => "March 23, 2024",
         Authors => {
 	     {Name => "Matthew Mastroeni", 
 		 Email => "mmastro@iastate.edu", 
@@ -23,17 +23,6 @@ newPackage(
         )
 
 
--- REFERENCES
------------------------------------------------------------------
-
--- [BES] = S. Backman, C. Eur, and C. Simpson. 
---         Simplicial generation of Chow rings of matroids. 
---         arXiv:1905.07114 [math.CO]
-
--- [Ox]  = J. Oxley. Matroid theory. Second edition. 
---         Oxford Graduate Texts in Mathematics, 21. 
---         Oxford University Press, Oxford, 2011.
-
 -- Record any symbols or functions (except "net") used in each file below.
 -- Comment out the name of the function/symbol if it is not exported.
 
@@ -48,9 +37,7 @@ newPackage(
 
 -- 1. Is there an algorithm to determine when 2 elements are conjugates?
 -- 2. Are there characterizations of finitely generated/finite subgroups?
--- 3. Which Coxeter groups have finitely many roots/reflections?  
---    Is there an algorithm to find them all? 
---    Or is there an algorithm to recognize reflections? 
+-- 3. Or is there an algorithm to recognize reflections? 
 --    (re: error-checking for implementing reflection subgroups)
 
 
@@ -64,8 +51,7 @@ newPackage(
 --    	2A. dynkinDiagram
 --    	2B. tableau
 --      2C. parabolicSubgroup
---    	2D. nerveComplex
---    	2E. poincare(CoxeterGroup)
+--    	2D. poincare(CoxeterGroup)
 
 
 export {
@@ -77,6 +63,7 @@ export {
     "bruhatPoset",    	      	  -- documented
     "cartanMatrix",    	       	  -- documented
     "coxeterGroup",    	       	  -- documented
+    "coxeterMatrix",	    	  -- documented
     "descentSet",    	     	  -- documented
     "dihedralGroup",		  -- documented
     "dynkinDiagram",	    	  -- ??
@@ -96,7 +83,7 @@ export {
     "isReduced",    	    	  -- ??
     -- length,	      	      	  -- overloaded, documented
     "longWord",	       	       	  -- documented
-    "nerveComplex",    	       	  -- ??
+    "nerveComplex",    	       	  -- documented
     "normalForm",    	 	  -- ??
     -- numgens,	       	       	  -- overloaded, ??
     "permutationAction",	  -- ??
@@ -107,21 +94,43 @@ export {
     "reflections",    	      	  -- documented
     "reflectionRep",	    	  -- documented
     "reflectionRepresentatives",  -- ??
+    -- relations,    	    	  -- overloaded, documented
     -- roots,	     	     	  -- overloaded, documented
     "rootPairs",    	    	  -- ??
     "rows",    	       	       	  -- ??
     "sign",    	       	       	  -- documented
     "specificCoxeterGroup",    	  -- documented
-    "specificDynkin",	     	  -- documented      
+    "specificDynkin",	     	  -- documented
+    "subgroup",	       	       	  -- ??      
     "symmetricGroup",    	  -- documented
     "tableau",	      	      	  -- ??
     "weakCompare",    	      	  -- ??
     "weakInterval",    	       	  -- ??
     "weakLattice",    	      	  -- ??
     "weights",	     	     	  -- ??
-    "wordToGroup"
-    
+    "wordToGroup",    	      	  -- ??
+   
+-- ToddCoxeter.m2
+    "CompleteComputation",    	  -- option, ??
+    "DisplayMode",    	      	  -- option, ??
+    -- image         	      	  -- overloaded, ??
+    -- kernel          	      	  -- overloaded, ??
+    -- map    	      	      	  -- overloaded, ??
+    "permutationRepresentation",  -- ??
+    "quotientMap",    	      	  -- ??
+    "reflectionRepresentation",	  -- ??
+    "regularEmbedding",	  	  -- ??
+    "regularRepresentation",	  -- ??
+    "relationTables",	     	  -- ??
+    "schriererGraph",	     	  -- ??
+    "signMap",	      	      	  -- ??
+    -- source	     	     	  -- overloaded, ??
+    -- target	     	     	  -- overloaded, ??
+    "targetValues",	     	  -- ??
+    "toddCoxeterProcedure",    	  -- ??
+    "transversal"    	     	  -- ??
     }
+
 --exportMutable {}
 
 
@@ -132,6 +141,7 @@ export {
 -------------------------------------------
 
 load "./CoxeterGroups/CoxeterSystems.m2"
+load "./CoxeterGroups/ToddCoxeter.m2"
 
 
 
@@ -140,10 +150,12 @@ load "./CoxeterGroups/CoxeterSystems.m2"
 beginDocumentation()
 
 load "./CoxeterGroups/CoxeterSystemsDoc.m2"
+load "./CoxeterGroups/ToddCoxeterDoc.m2"
 
 
 undocumented {
     (net, CoxeterGroup),
+    (net, GroupMap)
     }
 
 -- TESTS
