@@ -46,9 +46,10 @@ map (CoxeterGroup, CoxeterGroup, List) := GroupMap => o -> (G, W, g) -> (
 	(symbol targetValues) => g,
 	(symbol cache) => new CacheTable from {
 	    (symbol relationTables) => hashTable apply(relations W, r -> 
-		    r => hashTable {1 => apply(#r - 1, i -> "blank")} 
+		    r => hashTable {0 => apply(#r + 1, 
+			    i -> if i == 0 or i == #r then 0 else ".")} 
 		    ),
-	    (symbol schriererGraph) => hashTable apply(gens W, s -> s => digraph({1}, {}) ),
+	    (symbol schriererGraph) => hashTable apply(gens W, s -> s => digraph({0}, {}) ),
 	    (symbol transversal) => {id_W},
 	    (symbol targetValues) => {id_G},
 	    (symbol DegreeLimit) => 1, 
@@ -86,9 +87,10 @@ map (CoxeterGroup, List) := GroupMap => o -> (W, g) -> (
 	(symbol targetValues) => g,
 	(symbol cache) => new CacheTable from {
 	    (symbol relationTables) => hashTable apply(relations W, r -> 
-		    r => hashTable {1 => apply(#r - 1, i -> "blank")} 
+		    r => hashTable {0 => apply(#r + 1, 
+			    i -> if i == 0 or i == #r then 0 else ".")} 
 		    ),
-	    (symbol schriererGraph) => hashTable apply(gens W, s -> s => digraph({1}, {}) ),
+	    (symbol schriererGraph) => hashTable apply(gens W, s -> s => digraph({0}, {}) ),
 	    (symbol transversal) => {id_W},
 	    (symbol targetValues) => {id_(R^n)},
 	    (symbol DegreeLimit) => 1,  
@@ -223,7 +225,19 @@ relationTables GroupMap := o -> f -> (
     then toddCoxeterProcedure(f, DegreeLimit => o.DegreeLimit); 
     R := f.cache.relationTables;
     if o.DisplayMode == "pretty" then (
-	horizontalJoin ( (reverse sort pairs applyKeys(R, key -> toSequence key))/toList/netList )
+	makeTable := rel -> (
+	    header := {flatten apply(#rel, i -> if i == 0 then {" ", rel#i, " "} else {rel#i, " "})};
+	    divider := {flatten apply(#rel, i -> if i == 0 then {"_", "_", "_"} else {"_", "_"})};
+	    rows :=  apply(values (R#rel), 
+		row -> flatten apply(#row, 
+		    i -> if i == 0 then {row#i} else {"|", row#i}
+		    )
+		);
+	     netList(header|divider|rows, 
+		 Alignment => Center, HorizontalSpace => 1, BaseRow => 0, Boxes => false)
+	    );
+	netList(apply(sort keys R, rel -> makeTable rel ), 
+	    Alignment => Center, HorizontalSpace => 1, BaseRow => 0, Boxes => true)
 	)
     else R
     )
@@ -257,6 +271,10 @@ transversal GroupMap := List => o -> f -> (
     )
 
 
+graph Digraph := Graph => o -> D -> graph(vertices D, edges D)
+
+neighbors (Digraph, Thing) := Set => (D, v) -> neighbors(graph D, v) 
+
 -----------------------------------------------------------------
 
 toddCoxeterProcedure = method(Options => {DegreeLimit => 100})
@@ -271,7 +289,7 @@ toddCoxeterProcedure GroupMap := o -> f -> (
     	relTabs := relationTables(f, CompleteComputation => false);
 	
 	-- find incomplete relation table rows
-    	isIncompleteRow := (r, t) -> any(t#r, entry -> entry === "blank");
+    	isIncompleteRow := (r, t) -> any(t#r, entry -> entry === ".");
     	isIncompleteTable := t -> any(keys t, r -> isIncompleteRow(r, t));
     	incRelTabs := hashTable select(pairs relTabs, p -> isIncompleteTable last p);
 	
@@ -287,65 +305,80 @@ toddCoxeterProcedure GroupMap := o -> f -> (
 	    );
 	
 	-- update relation table rows
-    	updateRelTabs := (relTabs, rel, tab, row, maxRow, tofill) -> (
+    	updateRelTabs := (relTabs, rel, row, maxRow, tofill) -> (
 	    f.cache.relationTables = hashTable apply(pairs relTabs, 
-	    	(r, t) -> r => (
-		    if r == rel then (
-		    	hashTable (apply(pairs t, p -> if p#0 == row then (
-				    row => apply(#r - 1, 
-					i -> if i == tofill then maxRow else tab#row#i ) 
-				    ) 
-				else p#0 => p#1 )|{maxRow => apply(#r - 1, i -> "blank") } ) 
-			) 
-		    else (
-			hashTable ((pairs t)|{(maxRow, apply(#r - 1, i -> "blank") ) } )
+		(r, t) -> r => hashTable (apply(keys t, 
+			k -> k => apply(#r + 1, 
+			    i -> if r == rel and k == row and i == tofill then maxRow else t#k#i
+			    ) 
+			)|{maxRow => apply(#r + 1, i -> if i == 0 or i == #r then maxRow else ".") } 
+		    )
+		) 
+	    );
+
+
+	
+	scanRow := (rel, row) -> (
+	    iter := 0;
+	    newRow := row;
+	    newDed := {};
+	    SG := schriererGraph(f, CompleteComputation => false, DisplayMode => "separate");
+	    while iter <= #row do (
+		 newRow = apply(#newRow, 
+		     pos -> (
+			 if newRow#pos =!= "." then newRow#pos
+			 else (
+			     s := rel#(pos - 1);
+			     i := row#(pos -1);
+			     if (set vertices SG#s)#?i then (
+				 N := toList neighbors(SG#s, i);
+				 if #N > 0 then (
+				 j := first N;
+				 k := row#(pos + 1);
+				 if k =!= "." and not (set edges SG#(rel#pos))#?{j, k}
+				then (
+				    newDed = newDed|{(rel#pos, {j, k})}
+				    );
+				first N
+				) 
+			    else "."
+			    )
+			else "."
 			)
-	    	    )
+		    )
 		);
-    	    );
+	    iter = iter + 1;
+	    );
+	(newRow, newDed)
+	);
 	
 	-- scan relation table rows for deductions
     	scanRelTabs := (relTabs, ded) -> (
 	    deductions := {ded};
 
-	    local toUpdate; local d; local canDeduce;
+	    local newDed; local d; local SG;
 	    while #deductions > 0 do (
 	    	d = first deductions;
 	    	updateSchrierer d;
-	    	-- scan tables to fill in deduction
-	    	canDeduce = (rel, row, pos) -> (
-		    if rel#pos =!= d#0 then false 
-		    else if row == d#1#0 then true 
-		    else if pos == #rel - 2 or relTabs#rel#row#pos =!= d#1#0 then false
-		    else true
-		    );
-	    	toUpdate = select(flatten flatten apply(keys relTabs, r ->
-		     	apply(keys relTabs#r, k -> apply(#r - 1, i -> (r, k, i) ) ) ),
-		    t -> canDeduce t
-		    );
-		
+
+	    	-- scan tables to fill in deductions
 		f.cache.relationTables =  hashTable apply(pairs relTabs, 
-		    (r, t) -> r => (
-		     	hashTable apply(keys t, 
-			    k -> k => apply(#r - 1, 
-			     	i -> if (set toUpdate)#?(r, k, i) then d#1#1 else t#k#i
-			     	)
+		    (rel, tab) -> rel => hashTable apply(keys tab, 
+			row -> row => (
+			    (newRow, newDed) := scanRow(rel, tab#row);
+			    deductions = deductions|newDed;
+			    newRow
 			    )
-		     	)
+			)
 		    );
 		
-		toUpdate = select(toUpdate, 
-		    (r, k, i) -> i =!= #r - 2 and relTabs#r#k#(i + 1) =!= "blank");
 	   	relTabs = relationTables(f, CompleteComputation => false);
-		
-		-- if any entries filled, check for new deductions
-	    	deductions = deductions|apply(toUpdate, (r, k, i) -> (r#i, {relTabs#r#k#i, relTabs#r#k#(i+1)}) ); 
-	    	deductions = unique drop(deductions, 1);
+	    	deductions = drop(unique deductions, 1);
 	    	);      
 	    ); 
 	
-	local rel; local tab; local incRows; local row; local tofill; local i; local j; local fw;
-    	local U; local img; local ded;
+	local rel; local tab; local incRows; local row; local tofill; local i; local j; local s; 
+	local fw; local U; local img; local ded;
     	maxRow := max keys last first pairs relTabs; 
     	while #incRelTabs > 0 and maxRow < d do (
 	    maxRow = maxRow + 1;
@@ -358,43 +391,44 @@ toddCoxeterProcedure GroupMap := o -> f -> (
 	    rel = first sort select(keys incRelTabs, rel -> isIncompleteRow(row, incRelTabs#rel) );
 	    tab = incRelTabs#rel; 
 	    
-	    tofill = position(tab#row, j -> j === "blank");
-	    i = if tofill == 0 then row else tab#row#(tofill -1);
+	    tofill = position(tab#row, j -> j === ".");
+	    i = tab#row#(tofill -1);
 	    j = maxRow;
 	    U = f.cache.transversal;
 	    img = f.cache.targetValues;
-	    fw = (img#(i - 1))*(f (rel#tofill) );
+	    s = rel#(tofill - 1);
+	    fw = (img#i)*(f s);
 	    
 	    -- look for collapses
 	    if (set img)#?fw then (
 	    	-- a collapse occurred
 	    	j = position(apply(#img, j -> j), j -> img#j == fw);
-		updateSchrierer(rel#tofill, {i, j + 1});
+		updateSchrierer(s, {i, j});
 		--print f.cache.schriererGraph;
-		ded = (rel#tofill, {i, j + 1});
+		ded = (s, {i, j});
 		scanRelTabs(relTabs, ded);
 	    	relTabs = relationTables(f, CompleteComputation => false);
-		ded = (rel#tofill, {j + 1, i});
+		ded = (s, {j, i});
 		scanRelTabs(relTabs, ded);
 	    	relTabs = relationTables(f, CompleteComputation => false);
 	    	)
 	    else (
 	    	-- add to the transversal if no collapse occurred
 	    	f.cache.targetValues = img|{fw};
-	    	f.cache.transversal = U|{(U#(i - 1))*(rel#tofill)};
+	    	f.cache.transversal = U|{(U#i)*s};
 	    	-- adds new rows to relation tables
-		updateSchrierer(rel#tofill, {i, j});
+		updateSchrierer(s, {i, j});
 		--print f.cache.schriererGraph;
-	    	updateRelTabs(relTabs, rel, tab, row, j, tofill);
+	    	updateRelTabs(relTabs, rel, row, j, tofill);
 	    	relTabs = relationTables(f, CompleteComputation => false);
 	    	--print relTabs;
 		
-		if tofill == #rel - 2 then (
-		    ded = (rel#tofill, {maxRow, row});
+		if tofill == #rel - 1 then (
+		    ded = (s, {maxRow, row});
 		    scanRelTabs(relTabs, ded);
 	    	    relTabs = relationTables(f, CompleteComputation => false);
 		    )
-		 else if relTabs#rel#row#(tofill + 1) =!= "blank" then (
+		 else if relTabs#rel#row#(tofill + 1) =!= "." then (
 		    ded = (rel#tofill, {maxRow, tab#row#(tofill + 1)});
 		    scanRelTabs(relTabs, ded);
 	    	    relTabs = relationTables(f, CompleteComputation => false);
@@ -440,7 +474,7 @@ kernel GroupMap := Subgroup => o -> f -> (
     U := transversal f;
     W := source f;
     K := new Subgroup from hashTable{
-	(symbol generators) => flatten apply(U, u -> 
+	(symbol generators) => unique flatten apply(U, u -> 
 	    apply(select(apply(gens W, s -> u*s), w -> not (set U)#?w), w -> w*(q w)^(-1) )
 	    ),
 	(symbol group) => W,

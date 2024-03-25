@@ -68,9 +68,6 @@ document {
 	    "toddCoxeterProcedure(f, DegreeLimit => 6)",
 	    "relationTables(f, CompleteComputation => false, DisplayMode => \"pretty\")",
 	    "schriererGraph(f, CompleteComputation => false)",
-	    "toddCoxeterProcedure(f, DegreeLimit => 7)",
-	    "relationTables(f, CompleteComputation => false, DisplayMode => \"pretty\")",
-	    "schriererGraph(f, CompleteComputation => false)",
 	    "f.cache.CompleteComputation"
 	     },
 	    
@@ -81,19 +78,36 @@ document {
 /// EXAMPLE
 
 uninstallPackage "CoxeterGroups"
+installPackage "CoxeterGroups"
+help "toddCoxeterProcedure"
+
 restart
 loadPackage "CoxeterGroups"
 W = specificCoxeterGroup({s, t}, "A'1")
 g = apply(reflectionRepresentatives W, w -> sub(w, ZZ/3) )
 f = map(W, g)
-toddCoxeterProcedure(f, DegreeLimit => 8)
+toddCoxeterProcedure(f, DegreeLimit => 6)
 peek f.cache
 
-help "toddCoxeterProcedure"
 
+
+restart
+loadPackage "CoxeterGroups"
 C2 = symmetricGroup 2
 V = C2 * C2
 D = dihedralGroup 4
 f = map(V, D, {V_0, V_1})
 ker f
+
+restart
+loadPackage "CoxeterGroups"
+S = symmetricGroup 4
+s = signMap S
+toddCoxeterProcedure(s, DegreeLimit => 3)
+peek s.cache
+ker s
+
+
+  
+  flatten apply(#rel, i -> if i == 0 then {" ", rel#i, " "} else {rel#i, " "})
 ///
