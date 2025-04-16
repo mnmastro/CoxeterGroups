@@ -1,6 +1,7 @@
+GroupElement = new Type of HashTable
 CoxeterGroup = new Type of Monoid
 DynkinDiagram = new Type of HashTable
-Subgroup = new Type of HashTable
+Subgroup = new Type of Monoid
 Subgroup.synonym = "subgroup"
 
 -- COXETER SYSTEMS
@@ -29,8 +30,6 @@ isCoxeterMatrix Matrix := m -> (
 
 -- WORDS
 -----------------------------------------------------------------
-
-GroupElement = new Type of HashTable
 
 net GroupElement := g -> (
     expr := g.normalForm;
@@ -312,6 +311,17 @@ coxeterGroup Subgroup := CoxeterGroup => o -> P -> (
 	)
     )
 
+
+-----------------------------------------------------------------
+
+CoxeterGroup _ ZZ := GroupElement => (W, i) -> (gens W)#i
+
+CoxeterGroup _ List := GroupElement => (W, w) -> (
+    if #w == 0 then id_W
+    else product apply(w, i -> W_i)
+    )
+
+
 -----------------------------------------------------------------
 
 net CoxeterGroup := W -> (
@@ -473,12 +483,16 @@ isFiniteGroup CoxeterGroup := W -> (
     )
 
 
-isFiniteGroup Subgroup := Boolean => P -> isFiniteGroup coxeterGroup P
+isFiniteGroup Subgroup := Boolean => H -> (
+    if H.cache.?isFiniteGroup then H.cache.isFiniteGroup
+    else error "isFiniteGroup: Not implemented yet."
+    )
    
 
 -----------------------------------------------------------------
 
 groupElements = method(Options => {Format => "list"})
+
 
 groupElements CoxeterGroup := List => o -> W -> (
     if W.cache#?groupElements then (
@@ -885,7 +899,7 @@ dihedralGroup ZZ := CoxeterGroup => o -> n -> (
     )
 
 
--- SUBGROUPS + QUOTIENTS
+-- SUBGROUPS
 -----------------------------------------------------------------
 
 Subgroup#{Standard,AfterPrint} = Subgroup#{Standard,AfterNoPrint} = (H) -> (
@@ -907,23 +921,120 @@ subgroupPrepare Thing :=  x -> error "expected a list of group elements or subgr
 
 -----------------------------------------------------------------
 
-parabolicSubgroup = method()
+subgroup = method()
 
-parabolicSubgroup (List, CoxeterGroup) := Subgroup => (J, W) -> (
+subgroup List := Subgroup => J -> (
+    if #J == 0 then (
+	error "subgroup: Expected a nonempty list."
+	);
+    if any(J, w -> not instance(class w, CoxeterGroup) ) then (
+	error "subgroup: Expected a list of Coxeter group elements."
+	);
+    W := group first J;
+    if any(J, w -> group w =!= W) then (
+	error "subgroup: Expected a list of elements of the same Coxeter group."
+	);
     J = flatten apply(toList splice J, subgroupPrepare);
-    if not isSubset(J, gens W) then (
-	error "parabolicSubgroup: Expected a list of generators/parabolic subgroups 
-	of a Coxeter group."
-	); 
-    WJ:= new Subgroup from hashTable{
+
+    H := new Subgroup from hashTable{
 	(symbol generators) => J,
 	(symbol group) => W,
-	(symbol parabolic) => true,
-        (symbol cache) => new CacheTable from {}
+        (symbol cache) => new CacheTable from {
+	    (symbol relationTables) => hashTable apply(relations W, r -> 
+		    r => hashTable {0 => apply(#r + 1, 
+			    i -> if i == 0 or i == #r then 0 else ".")} 
+		    ),
+	    (symbol schriererGraph) => hashTable apply(gens W, s -> s => digraph({0}, {}) ),
+	    (symbol transversal) => {id_W},
+	    (symbol DegreeLimit) => 1, 
+	    (symbol CompleteComputation) => false
+	    }
 	};
-    WJ
+    
+    if J == {id_W} then (
+	H.cache.isParabolic = true;
+	H.cache.conjugate = id_W;
+	H.cache.cosetEquals = (u, w) -> u == w;
+	); 
+    
+    if isSubset(J, gens W) then (
+	H.cache.isParabolic = true;
+	H.cache.conjugate = id_W;
+	H.cache.cosetEquals = (u, w) -> isSubset(wordToGroup(normalForm(w^(-1)*u), W), J);
+	);
+    
+    H
     )
 
+-- subgroup Sequence := Subgroup =>  J -> subgroup flatten apply(toList splice J,subgroupPrepare)
+
+-----------------------------------------------------------------
+
+isParabolic = method()
+
+isParabolic Subgroup := Boolean => H -> (
+    if H.cache.?isParabolic then H.cache.isParabolic
+    else (
+	error "isParabolic: Not yet implemented."
+	)
+    )
+
+
+-----------------------------------------------------------------
+
+isNormal = method()
+
+isNormal Subgroup := Boolean => o -> H -> (
+    W := group H;
+    q := quotientMap H;
+    all(gens W, s -> all(gens H, h -> q (h^s) == id_W) )
+    )
+
+
+-----------------------------------------------------------------
+
+conjugate (GroupElement, GroupElement) := Subgroup => (s, w) -> (
+    if not instance(w, group s) then (
+	error "Expected a group elements from the same Coxeter group."
+	);
+    w*s*w^(-1)
+    )
+
+GroupElement ^ GroupElement := GroupElement => (s, w) -> conjugate(s, w)
+
+conjugate (Subgroup, GroupElement) := Subgroup => (H, w) -> (
+    W := group H;
+    if not instance(w, W) then (
+	error "Expected a group element from the same Coxeter group as the subgroup."
+	);
+    Hw := new Subgroup from hashTable{
+	(symbol generators) => apply(gens H, h -> h^w),
+	(symbol group) => group H,
+        (symbol cache) => new CacheTable from {
+	    (symbol relationTables) => H.cache.relationTables,
+	    (symbol schriererGraph) => H.cache.schriererGraph,
+	    (symbol transversal) => apply(H.cache.transversal, u -> u^w),
+	    (symbol DegreeLimit) => H.cache.DegreeLimit, 
+	    (symbol CompleteComputation) => H.cache.CompleteComputation
+	    }
+	};
+    
+    if H.cache.?isParabolic and H.cache.isParabolic then (
+	g := (H.cache.conjugate)*w^(-1);
+	Hw.cache.isParabolic = true;
+	Hw.cache.conjugate = g;
+	Hw.cache.cosetEquals = (u, v) -> H.cache.cosetEquals(u^g, v^g);
+	);
+    
+    Hw
+    )
+
+Subgroup ^ GroupElement := Subgroup => (H, w) -> conjugate(H, w)
+
+
+commutator = method()
+
+commutator (GroupElement, GroupElement) := GroupElement => (g, h) -> (h^g)*(h^(-1))
 
 -----------------------------------------------------------------
 
@@ -936,16 +1047,11 @@ group Subgroup := H -> H.group
 numgens Subgroup := ZZ => H -> #(gens H)
 
 net Subgroup := H -> (
-    hasAttribute := value Core#"private dictionary"#"hasAttribute";
-    getAttribute := value Core#"private dictionary"#"getAttribute";
-    ReverseDictionary := value Core#"private dictionary"#"ReverseDictionary";
-    if hasAttribute(H,ReverseDictionary) then toString getAttribute(H,ReverseDictionary)
-    else (
-	net "subgroup ("|
-	net concatenate drop(drop(characters toString apply(H.generators, s -> net s), 1 ), -1)
-    	|net ")"
-	)
+    net "subgroup ("|
+    net concatenate drop(drop(characters toString apply(H.generators, s -> net s), 1 ), -1)
+    |net ")"
     )
+
 
 -*
 
@@ -1080,10 +1186,12 @@ weakLattice CoxeterGroup := Poset => W -> poset(groupElements W, weakCompare)
 -- ENUMERATION
 ----------------------------------------------------------------- 
 
-nerveComplex = method()
+nerveComplex = method(Options => {Facets => false})
 
-nerveComplex CoxeterGroup := List => W -> (
-    select(subsets gens W, J -> isFiniteGroup parabolicSubgroup(J, W) )
+nerveComplex CoxeterGroup := List => o -> W -> (
+    N := select(subsets gens W, J -> if #J == 0 then true else isFiniteGroup coxeterGroup subgroup J );
+    if o.Facets then maximalElements poset(N, isSubset)
+    else N
     )
 
 
@@ -1105,7 +1213,7 @@ poincare CoxeterGroup := RingElement => W -> (
 	    coeff := apply(first entries transpose (coefficients f)_1, e -> sub(e, ZZ) );
 	    sum apply(#coeff, i -> (coeff#i)*A_0^(#coeff - i - 1) )
 	    ); 
-	poin := apply(N, J -> putInRing poincare parabolicSubgroup(J, W));
+	poin := apply(N, J -> putInRing poincare subgroup J);
 	den := -(sum apply(#poin, i -> mu#({},N#i)*(product drop(poin, {i,i}) ) ) );
 	poin = apply(select(pairs tally poin, p -> p_0 =!= 1_A), p -> Power{p_0, p_1});
 	num := Product poin;

@@ -805,7 +805,7 @@ document {
 		"nerveComplex W"
 		},
 	    
-	 SeeAlso => {isFiniteGroup, parabolicSubgroup, isRightAngled, independenceComplex}
+	 SeeAlso => {isFiniteGroup, subgroup, isRightAngled, independenceComplex}
 	    }
 
 document {

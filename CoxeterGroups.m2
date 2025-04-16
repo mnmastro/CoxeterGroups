@@ -62,16 +62,21 @@ export {
     "bruhatInterval",	     	  -- ??
     "bruhatPoset",    	      	  -- documented
     "cartanMatrix",    	       	  -- documented
+    "cosetEquals",    	      	  -- ??
+    "CoxeterGroup",    	       	  -- type, ??
     "coxeterGroup",    	       	  -- documented
     "coxeterMatrix",	    	  -- documented
     "descentSet",    	     	  -- documented
     "dihedralGroup",		  -- documented
+    "DynkinDiagram",	    	  -- type, ??
     "dynkinDiagram",	    	  -- ??
     "exchanges",    	      	  -- documented
     "expressions",    	      	  -- ??
+    "Facets",	     	     	  -- option, ??
     -- generators,    	      	  -- overloaded, ??
     "generatorSymbols",	       	  -- ??
     "group",	    	    	  -- documented
+    "GroupElement",    	       	  -- type, ??
     "groupElements",	    	  -- documented
     "groupOrder",    	     	  -- documented
     "hasType",	      	      	  -- ??
@@ -79,6 +84,8 @@ export {
     -- id,    	      	      	  -- overloaded, ??
     "isCoxeterMatrix",	      	  -- documented
     "isFiniteGroup",           	  -- documented
+    -- isNormal	   	       	  -- ??
+    "isParabolic",    	      	  -- ??
     "isRightAngled",	    	  -- documented
     "isReduced",    	    	  -- ??
     -- length,	      	      	  -- overloaded, documented
@@ -87,8 +94,6 @@ export {
     "normalForm",    	 	  -- ??
     -- numgens,	       	       	  -- overloaded, ??
     "permutationAction",	  -- ??
-    "parabolic",    	    	  -- ??
-    "parabolicSubgroup",    	  -- ??
     -- poincare	       	       	  -- overloaded, ??
     "reduceWord",    	     	  -- ??
     "reflections",    	      	  -- documented
@@ -101,6 +106,7 @@ export {
     "sign",    	       	       	  -- documented
     "specificCoxeterGroup",    	  -- documented
     "specificDynkin",	     	  -- documented
+    "Subgroup",	       	       	  -- type, ??
     "subgroup",	       	       	  -- ??      
     "symmetricGroup",    	  -- documented
     "tableau",	      	      	  -- ??
@@ -112,12 +118,18 @@ export {
    
 -- ToddCoxeter.m2
     "CompleteComputation",    	  -- option, ??
+    "Coset",	    	    	  -- type, ??
+    "Cosets",	     	     	  -- option, ??
     "DisplayMode",    	      	  -- option, ??
+    -- groundSet    	    	  -- overloaded, ??
+    -- GroupMap,		  -- type, ??
     -- image         	      	  -- overloaded, ??
+    "isNormal",	       	       	  -- ??
     -- kernel          	      	  -- overloaded, ??
     -- map    	      	      	  -- overloaded, ??
     "permutationRepresentation",  -- ??
     "quotientMap",    	      	  -- ??
+    "QuotientSet",    	      	  -- type, ??
     "reflectionRepresentation",	  -- ??
     "regularEmbedding",	  	  -- ??
     "regularRepresentation",	  -- ??
@@ -125,10 +137,15 @@ export {
     "schriererGraph",	     	  -- ??
     "signMap",	      	      	  -- ??
     -- source	     	     	  -- overloaded, ??
+    -- substitute    	     	  -- overloaded, ??
     -- target	     	     	  -- overloaded, ??
     "targetValues",	     	  -- ??
     "toddCoxeterProcedure",    	  -- ??
-    "transversal"    	     	  -- ??
+    "transversal",    	     	  -- ??
+    
+-- CKVComplex.m2
+    -- graph	    	    	  -- overloaded, ??
+    "sphericalElements"	       	  -- ??    
     }
 
 --exportMutable {}
@@ -142,7 +159,7 @@ export {
 
 load "./CoxeterGroups/CoxeterSystems.m2"
 load "./CoxeterGroups/ToddCoxeter.m2"
-
+load "./CoxeterGroups/CKVComplex.m2"
 
 
 
@@ -154,7 +171,9 @@ load "./CoxeterGroups/ToddCoxeterDoc.m2"
 
 
 undocumented {
+    (net, Coset),
     (net, CoxeterGroup),
+    (net, DynkinDiagram),
     (net, GroupMap)
     }
 

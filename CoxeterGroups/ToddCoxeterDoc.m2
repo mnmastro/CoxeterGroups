@@ -3,12 +3,12 @@ document {
 	
 	Headline => "run the Todd-Coxeter procedure",
 	
-	Usage => "toddCxeterProcedure H \n toddCxeterProcedure f",
+	Usage => "toddCoxeterProcedure H \n toddCoxeterProcedure f",
 	
 	Inputs => {
 	    	"H" => Subgroup => {"of a Coxeter group"},
 		"f" => GroupMap,  
-		DegreeLimit => ZZ => {"upper bound on the number of steps of the prcedure completed"},
+		DegreeLimit => ZZ => {"upper bound on the number of steps of the procedure completed"},
 		},
 	
 	
@@ -74,21 +74,77 @@ document {
 	 SeeAlso => {(map, CoxeterGroup, List), (map, CoxeterGroup, CoxeterGroup, List), 
 	     subgroup, schriererGraph, transversal, quotientMap, (kernel, GroupMap), (image, GroupMap)}
 	    }
+	
+document {
+	Key => {(kernel, GroupMap)},
+	
+	Headline => "compute the kernel of a group homomorphism",
+	
+	Usage => "kernel f",
+	
+	Inputs => {
+		"f" => GroupMap,
+		},
+	
+	   
+	Outputs => {
+	    Subgroup => {"the kernel of the homomorphism"}
+	    },
+	
+	
+	PARA {"This function is provided by the package ", TO CoxeterGroups,"."},
+	
+	PARA {"This function computes a set of generators for the kernel of a group homomorphism
+	    via the Todd-Coxeter procedure."},
+	
+	PARA {"The kernel of the sign homomorphism on the symmetric group on 4 letters is the 
+	    alternating group on 4 letters."},
+	
+	EXAMPLE { 
+	    "S = symmetricGroup 4",
+	    "sgn = signMap S",
+	    "A = ker sgn" 
+	    },
+
+	PARA {"The dihedral group of symmetries of a square admits a homomorphism to the Klein 4 group.
+	    We compute the kernel of this homomorphism."},
+	
+	EXAMPLE {
+	     "C2 = symmetricGroup 2",
+	     "V = C2 * C2",
+	     "D = dihedralGroup 4",
+	     "f = map(V, D, {V_0, V_1})",
+	     "ker f" 
+	     },
+	    
+	 SeeAlso => {(map, CoxeterGroup, List), (map, CoxeterGroup, CoxeterGroup, List), 
+	     toddCoxeterProcedure}
+	    }
 
 /// EXAMPLE
 
 uninstallPackage "CoxeterGroups"
 installPackage "CoxeterGroups"
 help "toddCoxeterProcedure"
+help "kernel(GroupMap)"
+
+
+
 
 restart
 loadPackage "CoxeterGroups"
 W = specificCoxeterGroup({s, t}, "A'1")
+nerveComplex W
+
+W = coxeterGroup cycleGraph 4
+nerveComplex W
+sphericalElements W
+H = subgroup(s,t,s,t,s)
 g = apply(reflectionRepresentatives W, w -> sub(w, ZZ/3) )
 f = map(W, g)
 toddCoxeterProcedure(f, DegreeLimit => 6)
 peek f.cache
-
+ker f
 
 
 restart
@@ -101,13 +157,20 @@ ker f
 
 restart
 loadPackage "CoxeterGroups"
-S = symmetricGroup 4
+S = symmetricGroup 3
 s = signMap S
 toddCoxeterProcedure(s, DegreeLimit => 3)
 peek s.cache
 ker s
 
 
-  
-  flatten apply(#rel, i -> if i == 0 then {" ", rel#i, " "} else {rel#i, " "})
+restart
+loadPackage "CoxeterGroups"
+D = dihedralGroup 3
+H = subgroup {s}
+X = D/H
+groundSet X
+s*t*s H
+t * oo
+
 ///
