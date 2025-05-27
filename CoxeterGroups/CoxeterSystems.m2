@@ -680,6 +680,8 @@ dynkinDiagram CoxeterGroup := DynkinDiagram => W -> (
 
 -----------------------------------------------------------------
 
+-- This needs fixing to allow indexing by multiple digit numbers such as "A10"
+
 specificDynkin = method()
 
 specificDynkin String := DynkinDiagram => name -> (
@@ -982,9 +984,9 @@ isParabolic Subgroup := Boolean => H -> (
 
 -----------------------------------------------------------------
 
-isNormal = method()
+isNormalSubgroup = method()
 
-isNormal Subgroup := Boolean => o -> H -> (
+isNormalSubgroup Subgroup := Boolean => o -> H -> (
     W := group H;
     q := quotientMap H;
     all(gens W, s -> all(gens H, h -> q (h^s) == id_W) )

@@ -2,12 +2,21 @@
 
 newPackage(
         "CoxeterGroups",
-        Version => "0.3", 
-        Date => "March 23, 2024",
+        Version => "0.4", 
+        Date => "May 27, 2025",
         Authors => {
 	     {Name => "Matthew Mastroeni", 
 		 Email => "mmastro@iastate.edu", 
 		 HomePage => "https://mnmastro.github.io/"
+		 },
+	     {Name => "Ethan Clayton",
+		 Email => "ewc0025@auburn.edu"
+		 },
+	     {Name => "David Crosby",
+		 Email => "dlc019@uark.edu"
+		 },
+	     {Name => "Aniketh Sivakumar", 
+		 Email => "asivakumar@tulane.edu"
 		 }
              },
         Headline => "Coxeter groups",
@@ -84,7 +93,7 @@ export {
     -- id,    	      	      	  -- overloaded, ??
     "isCoxeterMatrix",	      	  -- documented
     "isFiniteGroup",           	  -- documented
-    -- isNormal	   	       	  -- ??
+    "isNormalSubgroup",	       	  -- ??
     "isParabolic",    	      	  -- ??
     "isRightAngled",	    	  -- documented
     "isReduced",    	    	  -- ??
