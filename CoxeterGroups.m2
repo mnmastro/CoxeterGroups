@@ -6,7 +6,7 @@ newPackage(
         Date => "May 27, 2025",
         Authors => {
 	     {Name => "Matthew Mastroeni", 
-		 Email => "mmastro@iastate.edu", 
+		 Email => "mastromn@sunypoly.edu", 
 		 HomePage => "https://mnmastro.github.io/"
 		 },
 	     {Name => "Ethan Clayton",
