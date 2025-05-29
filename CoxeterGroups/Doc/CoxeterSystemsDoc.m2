@@ -418,33 +418,7 @@ document {
 	    
 	 SeeAlso => {descentSet, (length, GroupElement)}
 	    }
-	
-document {
-	Key => {group},
-	
-	Headline => "get the associated group of an object",
-	
-	Usage => "group w",
-	
-	Inputs => {
-		"w" => GroupElement
-		},
-	
-	Outputs => {
-		CoxeterGroup => {"the group associated to the input object"}
-		},
-	
-	PARA {"This function is provided by the package ", TO CoxeterGroups,"."},
-	
-	EXAMPLE {
-	    	"D = dihedralGroup 4", 
-		"gens D", 
-	    	"group s"
-		},
-	    
-	 SeeAlso => {coxeterGroup}
-	    }
-	
+		
 document {
 	Key => {groupElements, [groupElements, Format]},
 	
@@ -479,36 +453,7 @@ document {
 	    
 	 SeeAlso => {coxeterGroup, groupOrder, isFiniteGroup, (length, GroupElement)}
 	    }
-	
-document {
-	Key => {groupOrder, [groupOrder, DegreeLimit]},
-	
-	Headline => "the order of a group or group element",
-	
-	Usage => "groupOrder u \n groupOrder W",
-	
-	Inputs => {
-	    	"u" => GroupElement,
-		"W" => CoxeterGroup,
-		DegreeLimit => ZZ => {"the maximum exponent to check whether the element has order less than or equal to"}
-		},
-	
-	Outputs => {
-		ZZ => {"the order of the group or group element"}
-		},
-	
-	PARA {"This function is provided by the package ", TO CoxeterGroups,"."},
-	
-	EXAMPLE {
-	    	"groupOrder symmetricGroup 4",
-	    	"D = dihedralGroup 4",
-		"r = s*t", 
-		"groupOrder r"
-		},
-	    
-	 SeeAlso => {coxeterGroup, isFiniteGroup}
-	    }			
-
+				
 document {
 	Key => {hyperoctahedralGroup},
 	
@@ -689,54 +634,36 @@ document {
 	    }
 
 document {
-	Key => {(length, GroupElement)},
+	Key => {(isReflection, GroupElement)},
 	
-	Headline => "the length of a Coxeter group element",
+	Headline => "whether an element in a Coxeter group is a reflection",
 	
-	Usage => "length w",
+	Usage => "isReflection t",
 	
 	Inputs => {
-		"w" => GroupElement => {"an element of a Coxeter group"}
+		"t" => GroupElement => {"an element of a Coxeter group"}
 		},
 	
 	Outputs => {
-		ZZ => {"the length of the group element"}
+		Boolean => {"whether the element is a reflection"},
 		},
 	
 	PARA {"This function is provided by the package ", TO CoxeterGroups,"."},
 	
-	PARA {"Given a Coxeter group W with set of generators S, the length of a group element w
-	    is the smallest number of factors in a word on the generators S whose product in W is
-	    equal to w.  A word representing w of minimum length is said to be reduced.  Since all
-	    group elements are automatically represented by a canonical reduced word in the 
-	    generators, the length of w is just the number of factors in this reduced expression."},
+	PARA {"Given a Coxeter group W with set of Coxeter generators S, a reflection is any element of
+	    W that is conjugate to some element of S.  This function determines whether a given element 
+	    of W is a reflection."},
 	    
-	EXAMPLE {
-	    	"D = dihedralGroup(4, Variables => {\"u\", \"v\"})",  
-		"r = u*v",
-		"length(r^3)",
-		"r^3"
-		},
-	    
-	PARA {"For a permutation p in a symmetric group, the length of p is equal to the number of
-	    inversions of p when written in one-line notation p = p_1p_2...p_n.  An inversion of p
-	    is any pair of indices i < j such that p_i > p_j."},
-	        
 	EXAMPLE {
 	    	"S = symmetricGroup 4",  
-		"p = s_0*s_2*s_1*s_2",
-		"length p"
+		"isReflection(s_2*s_1*s_0*s_1*s_2)",
+		"isReflection(s_0*s_1*s_2)"
 		},
+	 
 	    
-	PARA {"The one-line notation of the permutation p can be obtained as follows."},
-	        
-	EXAMPLE {
-		"toList p"
-		},
-	    
-	 SeeAlso => {coxeterGroup}
-	    }
-
+	 SeeAlso => {reflections, (roots, CoxeterGroup), (roots, GroupElement)}
+	    }		
+	
 document {
 	Key => {longWord},
 	
@@ -1078,7 +1005,7 @@ document {
 	 SeeAlso => {coxeterGroup, dynkinDiagram, specificDynkin, dihedralGroup, 
 	     hyperoctahedralGroup, symmetricGroup}
 	    }
-
+	
 document {
 	Key => {specificDynkin},
 	
@@ -1166,382 +1093,3 @@ document {
 	    
 	 SeeAlso => {coxeterGroup, (toList, GroupElement), specificCoxeterGroup}
 	    }	
-	
--*
-document {
-	Key => {idealGradedMoebiusAlgebra, 
-	    (idealGradedMoebiusAlgebra, Matroid),
-	    (idealGradedMoebiusAlgebra, Graph)
-	    },
-	
-	Headline => "the defining ideal of the graded M\u00F6bius algebra of a matroid",
-	
-	Usage => "idealGradedMoebiusAlgebra M \n idealGradedMoebiusAlgebra G",
-	
-	Inputs => {
-	    	"M" => Matroid,
-	    	"G" => Graph,
-		},
-	
-	Outputs => {
-		Ideal => {"the defining ideal of the graded M\u00F6bius algebra of the matroid/graph"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"The graded M\u00F6bius algebra of a matroid M is the finite-dimensional algebra having
-	    basis elements y_F in one-to-one correspondence with the flats F of M with multiplication
-	    given by declaring y_F*y_G = y_H (where H is the join of F and G) if rk H = rk F + rk G, and
-	    by setting y_F*y_G = 0 otherwise.  This function computes the defining ideal of a minimal
-	    presentation for the graded M\u00F6bius algebra of the matroid M.  The generators of the ideal
-	    include the squares of all the variables and certain binomials corresponding to circuits 
-	    of the matroid.  By definition, the value of the  Hilbert function of the graded M\u00F6bius 
-	    algebra in degree r records the number of flats of M of rank r."},   
-	
-	EXAMPLE {
-		"M = uniformMatroid(4, 5);",
-		"I = idealGradedMoebiusAlgebra M",
-		"numerator hilbertSeries(I, Reduce => true)"
-		},
-	    
-	PARA {"Given a graph G, the command idealGradedMoebiusAlgebra G can be used to compute
-	    the definig ideal of the graded M\u00F6bius algebra of its cycle matroid."},    
-	
-	EXAMPLE {
-	    	"G = completeGraph 4",
-		"idealGradedMoebiusAlgebra G",
-		},
-	    
-	PARA {"The graded M\u00F6bius algebra of a matroid M can also be identified as a special subalgebra of
-	    the augmented Chow ring of M.  In the standard presentation of the augmented Chow ring of M with
-	    augmented variables y_i, the graded M\u00F6bius algebra is the subalgebra generated by the y_i."},
-	    
-	SeeAlso => {idealAugmentedChowRing}
-	    }
-
-document {
-	Key => {isCChordal, (isCChordal, Matroid)},
-	
-	Headline => "whether a matroid is C-chordal",
-	
-	Usage => "isCChordal M",
-	
-	Inputs => {
-	    	"M" => Matroid,
-		},
-	
-	Outputs => {
-		Boolean => {"whether the matroid is C-chordal"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"A matroid M is C-chordal if for every circuit C of size at least 4 in M there are circuits
-	    A and B whose intersection consists of a single element and whose symmetric difference is C."},
-	    
-	PARA {"For the cycle matroid of a graph G, the matroid being C-chordal is equivalent to the graph 
-	    being chordal."},    
-	
-	EXAMPLE {
-	    	"isCChordal matroid completeGraph 5",
-		},
-	    
-	PARA {"The following checks whether two non-graphic matroids are C-chordal."},    
-	
-	EXAMPLE {
-	    	"isCChordal specificMatroid \"fano\"",
-		"isCChordal dual matroid completeGraph 5",
-		},
-	    
-	 SeeAlso => {}
-	    }
-
-
-document {
-	Key => {isSimpleVertex, (isSimpleVertex, Graph, Thing)},
-	
-	Headline => "whether a vertex of a graph is a simple vertex",
-	
-	Usage => "isSimpleVertex(G, v)",
-	
-	Inputs => {
-	    	"G" => Graph,
-	    	"v" => Thing => {"a vertex of the graph"},
-		},
-	
-	Outputs => {
-		Boolean => {"whether the vertex is a simple vertex"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"The closed neighborhood of a vertex v in a graph G is the set of all neighbors
-	    of v together with v.  The vertex v is simple if the distinct sets of closed 
-	    neighborhoods of vertices in the closed neighborhood of v are totally ordered by
-	    inclusion."},
-	    
-	PARA {"Every vertex of a complete graph is simple."},    
-	
-	EXAMPLE {
-	    	"G = completeGraph 5",
-		"all(vertexSet G, v -> isSimpleVertex(G, v) )",
-		},
-	    
-	PARA {"On the other hand, no vertex of a sun graph is simple."},    
-	
-	EXAMPLE {
-	    	"G = sunGraph 4",
-		"any(vertexSet G, v -> isSimpleVertex(G, v) )",
-		},
-	    
-	SeeAlso => {isStronglyChordal}
-	    }
-
-document {
-	Key => {isStrongElimOrder, (isStrongElimOrder, Graph, List)},
-	
-	Headline => "whether a list of vertices is a strong elimination order",
-	
-	Usage => "isStrongElimOrder(G, V)",
-	
-	Inputs => {
-	    	"G" => Graph,
-		"V" => List => {"a permuted list of the vertices of the graph"}
-		},
-	
-	Outputs => {
-		Boolean => {"whether the given ordering of vertices is a strong elimination
-		    order"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"An ordering v_1,...,v_n of the vertices of a graph G is a strong elimination order if
-	    for each i and for any neighbors v_k and v_l of v_i in the induced subgraph G_i = G[v_i,...,v_n]
-	    with k < l, the closed neighbordhood of v_k in G_i is contained in the closed neighborhood
-	    of v_l in G_i.  This function checks whether a given ordering of the vertices of a graph
-	    is a strong elimination order.  Graphs having a strong elimination order are called strongly
-	    chordal."},
-	
-	EXAMPLE {
-	    	"B = deleteVertex(sunGraph 4, 7)",
-		"isStronglyChordal B",
-		"isStrongElimOrder(B, {0, 1, 2, 3, 4, 5, 6})",
-		"isStrongElimOrder(B, {4, 6, 5, 0, 3, 1, 2})",
-		},
-	    
-	 SeeAlso => {isStronglyChordal, strongElimOrder}
-	    }
-	
-document {
-	Key => {isStronglyChordal, (isStronglyChordal, Graph)},
-	
-	Headline => "whether a graph is strongly chordal",
-	
-	Usage => "isStronglyChordal G",
-	
-	Inputs => {
-	    	"G" => Graph,
-		},
-	
-	Outputs => {
-		Boolean => {"whether the graph is strongly chordal"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"A graph G is strongly chordal if it is chordal and every cycle C of even
-	    length in G has a chord whose ends are an odd distance apart in C.  Equivalently,
-	    G is strongly chordal if and only if it is chordal and every induced subgraph of
-	    G has a simple vertex. As a result, there is always a (not necessarily unique) 
-	    ordering v_1,...,v_n of the vertices of a strongly chordal graph in which 
-	    v_i is a simple vertex for the subgraph induced by v_1,...,v_{i-1} for each i.
-	    In practice, this function decides whether a graph is strongly chordal by 
-	    determining whether it is possible to construct such an ordering."},   
-	
-	EXAMPLE {
-		"G = graph {{a, b}, {a, c}, {b, c}, {b, d}, {b, e}, {c, d}, {c, e}, {d, e}}",
-		"isStronglyChordal G",
-		},
-	    
-	PARA {"Yet another characterization of strongly chordal graphs is that they are 
-	    precisely the chordal graphs that do not contain a sun graph as an induced
-	    subgraph."},    
-	
-	EXAMPLE {
-	    	"G = sunGraph 4",
-		"isChordal G",
-		"isStronglyChordal G",
-		},
-	    
-	SeeAlso => {isSimpleVertex}
-	    }
-
-document {
-	Key => {isStronglyTChordal, (isStronglyTChordal, Matroid, List)},
-	
-	Headline => "whether a matroid is strongly T-chordal for a given ordering of its ground set",
-	
-	Usage => "isStronglyTChordal(M, E)",
-	
-	Inputs => {
-	    	"M" => Matroid,
-		"E" => List => {"a permuted list of elements of the ground set of the matroid,
-		    arranged from smallest to largest"}
-		},
-	
-	Outputs => {
-		Boolean => {"whether the matroid is strongly T-chordal for the given ordering of its ground set"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"A strong elimination order for a matroid M is an ordering of the elements of its ground set
-	    such that for each circuit C of size at least 4 in M and each i in C different from the smallest
-	    element of C in the given ordering, there is a 3-circuit T such that T - C has size 1 and the
-	    smallest element of T in the given ordering is contained in C.  If a matroid has a strong elimination
-	    order, it is called strongly T-chordal.  This function checks whether a given ordering of the 
-	    ground set of a matroid is a strong elimination order."}, 
-	
-	EXAMPLE {
-	    	"B = deleteVertex(sunGraph 4, 7)",
-		"M = matroid B",
-		"hashTable apply(#(M.groundSet), i -> i => M.cache.groundSet#i)",
-		"isStronglyTChordal(M, {3, 6, 7, 9, 10, 11, 2, 1, 5, 0, 4, 8})",
-		},
-	    
-	 SeeAlso => {isCChordal}
-	    }
-
-document {
-	Key => {nbcBases, (nbcBases, Matroid, List)},
-	
-	Headline => "the maximal nbc-sets of a matroid",
-	
-	Usage => "nbcBases(M, E)",
-	
-	Inputs => {
-	    	"M" => Matroid,
-		"E" => List => {"a permuted list of elements of the ground set of the matroid,
-		    arranged from smallest to largest"}
-		},
-	
-	Outputs => {
-		List => {"the inclusion-maximal nbc-sets of the matroid with
-		    respect to the given order"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"Given an ordering of the ground set of a matroid M, a broken circuit of M is a set of
-	    the form C - {min C}, where C is a circuit of M and min C denotes the smallest element of
-	    C in the given ordering.  A subset of the ground set of M is called an nbc-set if it contains
-	    no broken circuits.  The inclusion-maximal nbc-sets are particular bases of M, called nbc-bases."},
-	
-	EXAMPLE {
-	    	"B = deleteVertex(sunGraph 3, 5)",
-		"M = matroid B",
-		"nbcBases(M, toList(0..6))",
-		},
-	    
-	 SeeAlso => {brokenCircuitComplex}
-	    }
-
-document {
-	Key => {strongElimOrder, (strongElimOrder, Graph)},
-	
-	Headline => "find a strong elimination order of a strongly chordal graph",
-	
-	Usage => "strongElimOrder G",
-	
-	Inputs => {
-	    	"G" => Graph,
-		},
-	
-	Outputs => {
-		List => {"an ordering of vertices that is a strong elimination order"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"This produces an ordering of the vertices of a strongly chordal graph that
-	    is a strong elimination order. See ", TO isStrongElimOrder, " and ", TO isStronglyChordal,
-	    " for more information about strong elimination orders and strongly chordal graphs."},
-	
-	EXAMPLE {
-	    	"B = deleteVertex(sunGraph 4, 7)",
-		"V = strongElimOrder B",
-		"isStrongElimOrder(B, V)",
-		},
-	    
-	 SeeAlso => {isStrongElimOrder, isStronglyChordal}
-	    }
-
-document {
-	Key => {sunGraph, (sunGraph, ZZ)},
-	
-	Headline => "construct a sun graph",
-	
-	Usage => "sunGraph n",
-	
-	Inputs => {
-	    	"n" => ZZ => {"greater than 2"},
-		},
-	
-	Outputs => {
-		Graph => {"the n-sun graph"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"A n-sun graph, also sometimes called an n-trampoline, is the graph on 2n
-	    vertices v_1,...,v_n, w_1,...,w_n in which the v_i form a complete graph and
-	    w_i is adjacent to only v_i and v_{i+1} for i < n and w_n is adjacent to only
-	    v_n and v_1."},   
-	
-	EXAMPLE {
-		"G = sunGraph 4"
-		},
-	    
-	SeeAlso => {isStronglyChordal}
-	    }
-	
-document {
-	Key => {(thresholdGraph, ZZ, List)},
-	
-	Headline => "construct a threshold graph by specifying dominating vertices",
-	
-	Usage => "thresholdGraph(n, D)",
-	
-	Inputs => {
-	    	"n" => ZZ => {"a positive integer"},
-		"I" => List => {"a list of positive integers in {1,...,n}"},
-		},
-	
-	Outputs => {
-		Graph => {"the threshold graph"}
-		},
-	
-	PARA {"This function is provided by the package ", TO LatticeChowRings,"."},
-	
-	PARA {"A threshold graph is a graph that is constructed by starting with an isolated 
-	    vertex and iteratively adding another isolated vertex or a vertex that adjacent to 
-	    each vertex added before it (a dominating vertex). This function produces a threshold
-	    graph with vertices {0,1,...,n} whose dominating vertices are precisely the elements 
-	    of the list {0,1,...,n} - I."},   
-	
-	EXAMPLE {
-		"G = thesholdGraph(9, {5,8})"
-		},
-	    
-	PARA {"The maximal cliques of G are precisely the closed neighborhods N[i] for i in I or i = 0.  
-	    For example, the maximal cliques of the above graph are:"},
-	
-	EXAMPLE {
-		"apply(facets cliqueComplex G, m -> positions(first exponents m, e -> e == 1))"
-		}, 
-	    
-	SeeAlso => {isStronglyChordal}
-	    }	
- 
-*-

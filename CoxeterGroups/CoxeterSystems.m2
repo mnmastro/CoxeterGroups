@@ -1,8 +1,3 @@
-GroupElement = new Type of HashTable
-CoxeterGroup = new Type of Monoid
-DynkinDiagram = new Type of HashTable
-Subgroup = new Type of Monoid
-Subgroup.synonym = "subgroup"
 
 -- COXETER SYSTEMS
 -----------------------------------------------------------------
@@ -29,32 +24,6 @@ isCoxeterMatrix Matrix := m -> (
 
 
 -- WORDS
------------------------------------------------------------------
-
-net GroupElement := g -> (
-    expr := g.normalForm;
-    if #expr == 0 then net (1_ZZ)
-    else net concatenate apply(2*#expr - 1, i -> if even i then toString expr#(i//2) else "*")
-    )
-
-
------------------------------------------------------------------
-
-expressions = method()
-
-expressions GroupElement := List => g -> g.cache#(symbol expressions)
-
-
------------------------------------------------------------------
-
-wordToGroup = method()
-
-wordToGroup (List, CoxeterGroup) := (word, W) -> (
-    if #word == 0 then {}
-    else apply(word, s -> first select(gens W, t -> normalForm t === {s}) )
-    )
-
-
 -----------------------------------------------------------------
 
 exchanges = method()
@@ -182,23 +151,6 @@ normalForm (List, CoxeterGroup) := List => (word, W) -> (
 	apply(word, s -> first normalForm s)
 	) 
     )
-	
------------------------------------------------------------------
-
-putInGroup = method()
-
-putInGroup (List, CoxeterGroup) := (expr, W) -> (
-    nf := reduceWord(expr, W);
-    new W from hashTable {
-	    (symbol group) => W,
-	    (symbol cache) => new CacheTable from {
-	    (symbol expressions) => unique {nf, expr}
-	    },
-       	(symbol normalForm) => nf,
-        (symbol length) => #nf,
-	(symbol sign) => (-1)^#expr
-	}
-    )
 
 
 -----------------------------------------------------------------
@@ -258,8 +210,6 @@ coxeterGroup (List, Matrix) := CoxeterGroup => o -> (S, m) -> (
 		       e -> apply(expressions t, e' -> e|e') ) ) )
 	    },
        	(symbol normalForm) => nf,
-        (symbol length) => #nf,
-	(symbol sign) => (sign w)*(sign t)
         }
     );
    
@@ -352,17 +302,6 @@ coxeterMatrix = method()
 
 coxeterMatrix CoxeterGroup := Matrix => W -> W.coxeterMatrix
 
-generators CoxeterGroup := List => o -> W -> W.generators
-
-group = method()
-
-group GroupElement := g -> g.group
-
-id CoxeterGroup := W -> putInGroup({}, W);
-
-length GroupElement := ZZ => w -> w.length
-
-numgens CoxeterGroup := ZZ => W -> #(gens W)
 
 CoxeterGroup * CoxeterGroup := (W, W') -> (
     D := dynkinDiagram W;
@@ -382,29 +321,19 @@ relations CoxeterGroup := List => W -> (
 	W.cache#(symbol relations) = rels;
 	rels
 	)
-    )
-
-
------------------------------------------------------------------
-
-groupOrder = method(Options => {DegreeLimit => 20})
-
-groupOrder GroupElement := ZZ => o -> g -> (
-    G := group g;
-    i := 1;
-    while g^i =!= id_G and i <= o.DegreeLimit do i = i + 1;
-    if g^i =!= id_G then error "groupOrder: Degree limit exceeded.  Element may have infinite order.";
-    i
-    )
-
-groupOrder CoxeterGroup := ZZ => o -> W -> if not isFiniteGroup W then infinity else #(groupElements W)    
+    )   
 
 
 -----------------------------------------------------------------
 
 sign = method()
 
-sign GroupElement := g -> g.sign
+sign GroupElement := w -> (
+    if not instance(group w, CoxeterGroup) then (
+	error "sign: Expected an element of a Coxter group."
+	);
+    (-1)^(length w)
+    )
 
 
 -----------------------------------------------------------------
@@ -622,6 +551,26 @@ roots GroupElement := Matrix => {} >> o -> t -> (
     if not (set reflections W)#?t then error "roots: Expected a reflection of a Coxeter group.";
     W.cache#(symbol rootPairs)#t
     )
+
+
+-----------------------------------------------------------------
+
+isReflection = method()
+
+isReflection GroupElement := Boolean => w -> (
+    if not instance(group w, CoxeterGroup) then (
+	error "isReflection: Expected an element of a Coxeter group."
+	);
+    l := length w;
+    if even l then false
+    -- Reflections must have odd length.
+    else (
+	l = l//2;
+	w == subword(l + 1, w)*(subword(l, w))^(-1)
+	)
+    )
+
+-- This method is based on Lemma 1.4 in Matthew Dyer's thesis.
 
 
 -----------------------------------------------------------------
@@ -995,51 +944,6 @@ isNormalSubgroup Subgroup := Boolean => o -> H -> (
 
 -----------------------------------------------------------------
 
-conjugate (GroupElement, GroupElement) := Subgroup => (s, w) -> (
-    if not instance(w, group s) then (
-	error "Expected a group elements from the same Coxeter group."
-	);
-    w*s*w^(-1)
-    )
-
-GroupElement ^ GroupElement := GroupElement => (s, w) -> conjugate(s, w)
-
-conjugate (Subgroup, GroupElement) := Subgroup => (H, w) -> (
-    W := group H;
-    if not instance(w, W) then (
-	error "Expected a group element from the same Coxeter group as the subgroup."
-	);
-    Hw := new Subgroup from hashTable{
-	(symbol generators) => apply(gens H, h -> h^w),
-	(symbol group) => group H,
-        (symbol cache) => new CacheTable from {
-	    (symbol relationTables) => H.cache.relationTables,
-	    (symbol schriererGraph) => H.cache.schriererGraph,
-	    (symbol transversal) => apply(H.cache.transversal, u -> u^w),
-	    (symbol DegreeLimit) => H.cache.DegreeLimit, 
-	    (symbol CompleteComputation) => H.cache.CompleteComputation
-	    }
-	};
-    
-    if H.cache.?isParabolic and H.cache.isParabolic then (
-	g := (H.cache.conjugate)*w^(-1);
-	Hw.cache.isParabolic = true;
-	Hw.cache.conjugate = g;
-	Hw.cache.cosetEquals = (u, v) -> H.cache.cosetEquals(u^g, v^g);
-	);
-    
-    Hw
-    )
-
-Subgroup ^ GroupElement := Subgroup => (H, w) -> conjugate(H, w)
-
-
-commutator = method()
-
-commutator (GroupElement, GroupElement) := GroupElement => (g, h) -> (h^g)*(h^(-1))
-
------------------------------------------------------------------
-
 generators Subgroup := List => o -> H -> H.generators
 
 Subgroup_* := List => H -> gens H
@@ -1075,32 +979,6 @@ quotient Subgroup := QuotientSet => P -> (
 -- BRUHAT + WEAK ORDERS
 -----------------------------------------------------------------
 
-isSubword = method()
-
-isSubword (List, List) := Boolean => (w, v) -> (
-    local pos;
-    while #w > 0 do(
-	if not isSubset(w, v) then break 
-	else (
-	    pos = position(v, s -> s == first w);
-	    w = drop(w, 1);
-	    v = drop(v, pos)
-	    )
-	);
-    if #w == 0 then true else false
-    )
-
-
------------------------------------------------------------------
-
-subwords = method()
-
-subwords List := List => w -> subsets w
-
-subwords (List, List) := List => (w, v) -> select(subsets v, swd -> isSubword(w, swd) )
-
-   
------------------------------------------------------------------
 
 bruhatCompare = method()
 

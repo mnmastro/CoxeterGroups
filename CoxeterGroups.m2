@@ -63,31 +63,51 @@ newPackage(
 --    	2D. poincare(CoxeterGroup)
 
 
+-------------------------------------------
+--- CONTENTS ------------------------------
+-------------------------------------------
+
 export {
+
+-- Groups.m2
+    "Group",			  -- type, ??
+    "GroupElement",    	       	  -- type, ??
+    "Subgroup",	       	       	  -- type, ??
+    "CoxeterGroup",    	       	  -- type, ??
+    "DynkinDiagram",	    	  -- type, ??
+
+    -- conjugate,		  -- overloaded, ??
+    "commutator",		  -- ??
+    "expressions",    	      	  -- ??
+    -- generators,    	      	  -- overloaded, ??
+    "generatorSymbols",	       	  -- ??
+    "group",	    	    	  -- documented
+    "groupOrder",    	     	  -- documented    
+    -- id,    	      	      	  -- overloaded, ??
+    "isSubword",		  -- ??
+    -- length,	      	      	  -- overloaded, documented    
+    -- numgens,	       	       	  -- overloaded, ??
+    "subword",			  -- documented (subword, ZZ, GroupElement)
+    "subwords",			  -- documented (subwords, GroupElement), (subwords, GroupElement, ZZ)
+    "wordToGroup",    	      	  -- ??
+
     
 --CoxeterSystems.m2
     "AllReflections",	     	  -- option, ??
+    "Facets",	     	     	  -- option, ??
+    
     "bruhatCompare",	    	  -- documented
     "bruhatInterval",	     	  -- ??
     "bruhatPoset",    	      	  -- documented
     "cartanMatrix",    	       	  -- documented
     "cosetEquals",    	      	  -- ??
-    "CoxeterGroup",    	       	  -- type, ??
     "coxeterGroup",    	       	  -- documented
     "coxeterMatrix",	    	  -- documented
     "descentSet",    	     	  -- documented
     "dihedralGroup",		  -- documented
-    "DynkinDiagram",	    	  -- type, ??
     "dynkinDiagram",	    	  -- ??
     "exchanges",    	      	  -- documented
-    "expressions",    	      	  -- ??
-    "Facets",	     	     	  -- option, ??
-    -- generators,    	      	  -- overloaded, ??
-    "generatorSymbols",	       	  -- ??
-    "group",	    	    	  -- documented
-    "GroupElement",    	       	  -- type, ??
     "groupElements",	    	  -- documented
-    "groupOrder",    	     	  -- documented
     "hasType",	      	      	  -- ??
     "hyperoctahedralGroup",    	  -- documented
     -- id,    	      	      	  -- overloaded, ??
@@ -95,13 +115,12 @@ export {
     "isFiniteGroup",           	  -- documented
     "isNormalSubgroup",	       	  -- ??
     "isParabolic",    	      	  -- ??
+    "isReflection",		  -- ??
     "isRightAngled",	    	  -- documented
     "isReduced",    	    	  -- ??
-    -- length,	      	      	  -- overloaded, documented
     "longWord",	       	       	  -- documented
     "nerveComplex",    	       	  -- documented
     "normalForm",    	 	  -- ??
-    -- numgens,	       	       	  -- overloaded, ??
     "permutationAction",	  -- ??
     -- poincare	       	       	  -- overloaded, ??
     "reduceWord",    	     	  -- ??
@@ -115,42 +134,44 @@ export {
     "sign",    	       	       	  -- documented
     "specificCoxeterGroup",    	  -- documented
     "specificDynkin",	     	  -- documented
-    "Subgroup",	       	       	  -- type, ??
-    "subgroup",	       	       	  -- ??      
+    "subgroup",	       	       	  -- ??
     "symmetricGroup",    	  -- documented
     "tableau",	      	      	  -- ??
     "weakCompare",    	      	  -- ??
     "weakInterval",    	       	  -- ??
     "weakLattice",    	      	  -- ??
     "weights",	     	     	  -- ??
-    "wordToGroup",    	      	  -- ??
    
 -- ToddCoxeter.m2
-    "CompleteComputation",    	  -- option, ??
     "Coset",	    	    	  -- type, ??
+    "GroupMap",			  -- type, ??
+    "QuotientSet",    	      	  -- type, ??
+     
+    "CompleteComputation",    	  -- option, ??
     "Cosets",	     	     	  -- option, ??
     "DisplayMode",    	      	  -- option, ??
+    
     -- groundSet    	    	  -- overloaded, ??
-    -- GroupMap,		  -- type, ??
+    "quotientMap",    	      	  -- ??    
+    "relationTables",	     	  -- ??
+    "schriererGraph",	     	  -- ??
+    "toddCoxeterProcedure",    	  -- ??
+    "transversal",    	     	  -- ??
+
+-- GroupMaps.m2    
     -- image         	      	  -- overloaded, ??
-    "isNormal",	       	       	  -- ??
-    -- kernel          	      	  -- overloaded, ??
-    -- map    	      	      	  -- overloaded, ??
+    -- kernel          	      	  -- overloaded, documented
+    -- map    	      	      	  -- overloaded, documented
     "permutationRepresentation",  -- ??
-    "quotientMap",    	      	  -- ??
-    "QuotientSet",    	      	  -- type, ??
     "reflectionRepresentation",	  -- ??
     "regularEmbedding",	  	  -- ??
     "regularRepresentation",	  -- ??
-    "relationTables",	     	  -- ??
-    "schriererGraph",	     	  -- ??
     "signMap",	      	      	  -- ??
     -- source	     	     	  -- overloaded, ??
     -- substitute    	     	  -- overloaded, ??
     -- target	     	     	  -- overloaded, ??
     "targetValues",	     	  -- ??
-    "toddCoxeterProcedure",    	  -- ??
-    "transversal",    	     	  -- ??
+
     
 -- CKVComplex.m2
     -- graph	    	    	  -- overloaded, ??
@@ -166,8 +187,10 @@ export {
 --- LOAD AUXILIARY FILES ------------------
 -------------------------------------------
 
+load "./CoxeterGroups/Groups.m2"
 load "./CoxeterGroups/CoxeterSystems.m2"
 load "./CoxeterGroups/ToddCoxeter.m2"
+load "./CoxeterGroups/GroupMaps.m2"
 load "./CoxeterGroups/CKVComplex.m2"
 
 
@@ -175,15 +198,17 @@ load "./CoxeterGroups/CKVComplex.m2"
 
 beginDocumentation()
 
-load "./CoxeterGroups/CoxeterSystemsDoc.m2"
-load "./CoxeterGroups/ToddCoxeterDoc.m2"
-
+load "./CoxeterGroups/Doc/GroupsDoc.m2"
+load "./CoxeterGroups/Doc/CoxeterSystemsDoc.m2"
+load "./CoxeterGroups/Doc/ToddCoxeterDoc.m2"
+load "./CoxeterGroups/Doc/GroupMapsDoc.m2"
 
 undocumented {
     (net, Coset),
     (net, CoxeterGroup),
     (net, DynkinDiagram),
-    (net, GroupMap)
+    (net, GroupMap),
+    (net, Subgroup)
     }
 
 -- TESTS
