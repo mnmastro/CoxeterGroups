@@ -147,7 +147,7 @@ isSubword (List, List) := Boolean => (w, v) -> (
 
 isSubword (GroupElement, GroupElement) := Boolean => (w, v) -> (
    if group w =!= group v then (
-	error "bruhatCompare: Expected elements of the same group."
+	error "isSubword: Expected elements of the same group."
 	);
     if w == v then true
     else if length w >= length v then false
@@ -179,7 +179,7 @@ subwords (List, List) := List => (w, v) -> select(subsets v, swd -> isSubword(w,
 
 subwords (GroupElement, ZZ) := List => (w, l) -> (
     possible := unique apply(flatten apply(length w - l, i -> subsets(normalForm w, l + i) ),
-	swd -> putInGroup(swd, group w) );
+	swd -> if #swd == 0 then id_(group w) else product wordToGroup(swd, group w) );
     -- Any subword that reduces to have length l must have at least l factors
 
     select(possible, swd -> length swd == l)
@@ -188,4 +188,6 @@ subwords (GroupElement, ZZ) := List => (w, l) -> (
 --INPUT: A group element w and an integer l at most the length of w
 --OUTPUT: A list of all subwords of w of length l
 
-subwords GroupElement := List => w -> unique apply(subwords normalForm w, swd -> putInGroup(swd, group w) )
+subwords GroupElement := List => w -> (
+    unique apply(subwords normalForm w, swd -> if #swd == 0 then id_(group w) else product wordToGroup(swd, group w) )
+    )

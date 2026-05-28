@@ -455,6 +455,9 @@ groupElements CoxeterGroup := List => o -> W -> (
 longWord = method()
 
 longWord CoxeterGroup := GroupElement => W -> (
+    if not isFiniteGroup W then (
+	error "longWord: Expected a finite Coxeter group."
+	);
     elts := groupElements(W, Format => "hashtable");
     N := max keys elts;
     first (elts#N)
@@ -631,92 +634,96 @@ dynkinDiagram CoxeterGroup := DynkinDiagram => W -> (
 
 -- This needs fixing to allow indexing by multiple digit numbers such as "A10"
 
+
+getType = method()
+
+getType String := (String, Boolean, ZZ) => name -> (
+    if #name < 2 then (
+	error "specificDynkin: Expected a string with at least two characters."
+	);
+    type := first name;
+    if not (set("A", "B", "C", "D", "E", "F", "G", "H", "I"))#?type then (
+	error "specificDynkin: Expected the first character to be A, B, C, D, E, F, G, H, or I."
+	);
+    isNumeric := c -> try instance(value c, ZZ) else false;
+    if not all(drop(toList name, 2), c -> isNumeric c) then (
+	error "specificDynkin: Expected all except possibly the first two characters to be numeric."
+	);
+    finite := isNumeric name#1;
+    if not finite then (
+	if name#1 =!= "'" then (
+	    error "specificDynkin: The second character must either be numeric or \"'\"."
+	    );
+	if #name < 3 then (
+	    error "specificDynkin: Expected a string with at least three characters."
+	    ); 
+	);
+    dropChar := if finite then 1 else 2;
+    n := value concatenate drop(toList name, dropChar);
+    (type, finite, n)
+    )
+
+
 specificDynkin = method()
 
 specificDynkin String := DynkinDiagram => name -> (
-    if not (set("A", "B", "C", "D", "E", "F", "G", "H", "I"))#?(first name) then (
-	error "specificDynkin: Expected the first character to be A, B, C, D, E, F, G, H, or I."
-	);
-    n := value last name;
-    if not instance(value last name, ZZ) then (
-	error "specificDynkin: Expected the last character to be an integer."
-	);
-    if #name > 2 and (#name =!= 3 or name#1 =!= "'") then (
-	error "specificDynkin: Not one of the named Dynkin diagrams."
-	); 
-    if first name == "A" then (
+    (type, finite, n) := getType name;
+    if type == "A" then (
 	if n <= 0 then error "specificDynkin: Expected a positive integer.";
 	if n >= 2 then (
-	    if #name == 2 then dynkinDiagram pathGraph n else dynkinDiagram cycleGraph(n + 1)
+	    if finite then dynkinDiagram pathGraph n
+	    else dynkinDiagram cycleGraph(n + 1)
 	    )
 	else (
 	    -- fix issue with pathGraph 1 having no vertices
-	    if #name == 2 then dynkinDiagram graph({0}, {}) 
+	    if finite then dynkinDiagram graph({0}, {})
 	    else dynkinDiagram(pathGraph 2, {{0,1} => 0})
 	    )
 	)
-    else if first name == "B" then (
-	if n <= 1 then error "specificDynkin: Expected an integer greater than or equal to 2.";
-	if #name == 2 then dynkinDiagram(pathGraph n, {{n-2, n-1} => 4})
-	else (
-	    if n <= 2 then error "specificDynkin: Expected an integer greater than or equal to 3.";
-	    dynkinDiagram(addEdges'(addVertices(pathGraph n, {n, n+1}), {{0, n},{0, n+1}}), 
-		{{n-2, n-1} => 4})
-	    )
+    else if type == "B" then (
+	if n <= 1 then error "specificDynkin: Expected an integer greater than or equal to 2."
+	else if finite then dynkinDiagram(pathGraph n, {{n-2, n-1} => 4})
+	else if n == 2 then specificDynkin "C'2"
+	else dynkinDiagram(addEdges'(addVertices(pathGraph n, {n}), {{1, n}}), {{n-2, n-1} => 4})
 	)
-    else if first name == "C" then (
-	if #name == 2 then error "specificDynkin: Not one of the named Dynkin diagrams.";
-	if n <= 1 then error "specificDynkin: Expected an integer greater than or equal to 2.";
-	dynkinDiagram(pathGraph n, {{0, 1} => 4, {n-2, n-1} => 4})
+    else if type == "C" then (
+	if finite then error "specificDynkin: Not one of the named Dynkin diagrams."
+	else if n <= 1 then error "specificDynkin: Expected an integer greater than or equal to 2."
+	else dynkinDiagram(addEdges'(addVertices(pathGraph n, {n}), {{0, n}}), {{0, n} => 4, {n-2, n-1} => 4})
 	)
     else if first name == "D" then (
-	if n <= 3 then error "specificDynkin: Expected an integer greater than or equal to 4.";
-	if #name == 2 then (
-	    dynkinDiagram(addEdges'(addVertices(pathGraph(n-2), {n-2, n-1}), 
-		    {{n-3, n-2},{n-3, n-1}}) )
-	    )
-	else (
-	    dynkinDiagram(addEdges'(addVertices(pathGraph(n-2), {n-2, n-1, n, n+1}), 
-		    {{n-3, n-2},{n-3, n-1},{0, n},{0, n+1}}) )
-	    )
+	if n <= 3 then error "specificDynkin: Expected an integer greater than or equal to 4."
+	else if finite then dynkinDiagram(addEdges'(addVertices(pathGraph(n-2), {n-2, n-1}), {{n-3, n-2},{n-3, n-1}}) )
+	else dynkinDiagram(addEdges'(addVertices(pathGraph(n-2), {n-2, n-1, n}), {{n-3, n-2},{n-3, n-1},{1, n}}) )
 	)
     else if first name == "E" then (
-	if not (set {6, 7, 8})#?n then (
-	    error "specificDynkin: Expected the last character to be 6, 7, or 8."
-	    );
-	if #name == 2 then (
-	    dynkinDiagram(addEdges'(addVertices(pathGraph(n-1), {n-1}), {{2, n-1}}) )
-	    )
-	else (
-	    if n == 6 then (
-		dynkinDiagram(addEdges'(addVertices(pathGraph 5, {5, 6}), {{2, 5}, {5, 6}}) )
-	    )
-	    else if n == 7 then (
-		dynkinDiagram(addEdges'(addVertices(pathGraph 7, {7}), {{3, 7}}) )
-		)
-	    else (
-		dynkinDiagram(addEdges'(addVertices(pathGraph 8, {9}), {{2, 9}}) )
-		)
-	    )
+	if not (set {6, 7, 8})#?n then error "specificDynkin: Expected the integer to be 6, 7, or 8."
+	else if finite then dynkinDiagram(addEdges'(addVertices(pathGraph(n-1), {n-1}), {{2, n-1}}) )
+	else if n == 6 then dynkinDiagram(addEdges'(addVertices(pathGraph 5, {5, 6}), {{2, 5}, {5, 6}}) )
+	else if n == 7 then dynkinDiagram(addEdges'(addVertices(pathGraph 7, {7}), {{3, 7}}) )
+	else dynkinDiagram(addEdges'(addVertices(pathGraph 8, {9}), {{2, 9}}) )
 	)
     else if first name == "F" then (
-	if n =!= 4 then error "specificDynkin: Expected the last character to be 4.";
-	if #name == 2 then dynkinDiagram(pathGraph 4, {{1,2} => 4}) else dynkinDiagram(pathGraph 5, {{2,3} => 4})
+	if n =!= 4 then error "specificDynkin: Expected the integer to be 4."
+	else if finite then dynkinDiagram(pathGraph 4, {{1,2} => 4})
+	else dynkinDiagram(pathGraph 5, {{1,2} => 4})
 	)
     else if first name == "G" then (
-	if n =!= 2 then error "specificDynkin: Expected the last character to be 2.";
-	dynkinDiagram(pathGraph 3, {{1,2} => 6})
+	if finite then error "specificDynkin: Not one of the named Dynkin diagrams."
+	else if n =!= 2 then error "specificDynkin: Expected the integer to be 2."
+	else dynkinDiagram(pathGraph 3, {{1,2} => 6})
 	)
     else if first name == "H" then (
-	if not (set {3, 4})#?n then (
-	    error "specificDynkin: Expected the second character to be 3 or 4."
-	    );
-	dynkinDiagram(pathGraph n, {{0,1} => 5})
+	if not finite then error "specificDynkin: Not one of the named Dynkin diagrams."
+	else if not (set {3, 4})#?n then error "specificDynkin: Expected the integer to be 3 or 4."
+	else dynkinDiagram(pathGraph n, {{0,1} => 5})
 	)
     else if first name == "I" then (
-	if n <= 1 then error "specificDynkin: Expected an integer greater than or equal to 2.";
-	dynkinDiagram(pathGraph 2, {{0,1} => n})
+	if not finite then error "specificDynkin: Not one of the named Dynkin diagrams."
+	else if n <= 1 then error "specificDynkin: Expected an integer greater than or equal to 2."
+	else dynkinDiagram(pathGraph 2, {{0,1} => n})
 	)
+    else error "specificDynkin: Not one of the named Dynkin diagrams."
     )
 
 
@@ -726,14 +733,16 @@ specificDynkin String := DynkinDiagram => name -> (
 specificCoxeterGroup = method()
 
 specificCoxeterGroup (List, String) := CoxeterGroup => (S, name) -> (
-    W := coxeterGroup(S, specificDynkin name); 
-    W.cache#(symbol hasType) = name;
+    W := coxeterGroup(S, specificDynkin name);
+    (type, finite, n) := getType name;
+    W.cache#(symbol hasType) = type|(if finite then "" else "'")|(toString n);
     W
     )
 
 specificCoxeterGroup String := CoxeterGroup => name -> (
     W := coxeterGroup specificDynkin name; 
-    W.cache#(symbol hasType) = name;
+    (type, finite, n) := getType name;
+    W.cache#(symbol hasType) = type|(if finite then "" else "'")|(toString n);
     W
     )
 
@@ -974,93 +983,6 @@ quotient Subgroup := QuotientSet => P -> (
 	}
     )
 *-
-
-
--- BRUHAT + WEAK ORDERS
------------------------------------------------------------------
-
-
-bruhatCompare = method()
-
-bruhatCompare (GroupElement, GroupElement) := (w, v) -> (
-    W := group w;
-    if W =!= group v then (
-	error "bruhatCompare: Expected group elements of the same Coxeter group."
-	);
-    if w == v then true
-    else if length w >= length v then false
-    else if w == id_W then true
-    else (
-    	nfw := wordToGroup(normalForm w, W);
-    	nfv := wordToGroup(normalForm v, W);
-	if not isSubset(nfw, nfv) then false
-	else any(select(subsets(nfv, #nfw), swd -> isSubset(nfw, swd)), swd -> product swd == w)
-	)	    
-    )
-
-
------------------------------------------------------------------
-
-bruhatInterval = method()
-
-bruhatInterval (GroupElement, GroupElement) := (w, v) -> (
-    if not bruhatCompare(w, v) then (
-	error "bruhatInterval: Expected the first group element to be less than or equal to the
-	second in Bruhat order."
-	);
-    W := group w;
-    w = wordToGroup(normalForm w, W);
-    v = wordToGroup(normalForm v, W);
-    poset(apply(subwords(w, v), swd -> wordToGroup(swd, W) ), bruhatCompare)	    
-    )
-
-
------------------------------------------------------------------
-
-bruhatPoset = method()
-
-bruhatPoset CoxeterGroup := Poset => W -> poset(groupElements W, bruhatCompare)
-
-
------------------------------------------------------------------
-
-weakCompare = method(Options => {Left => false})
-
-weakCompare (GroupElement, GroupElement) := o -> (w, v) -> (
-    if group w =!= group v then (
-	error "weakCompare: Expected group elements of the same Coxeter group."
-	);
-    if o.Left then (
-	isSubset(descentSet(w, AllReflections => true), descentSet(v, AllReflections => true) )
-	)
-    else (
-	isSubset(descentSet(w, Left => true, AllReflections => true), 
-	    descentSet(v, Left => true, AllReflections => true) )
-	)	    
-    )
-
-
------------------------------------------------------------------
-
-weakInterval = method(Options => {Left => false})
-
-weakInterval (GroupElement, GroupElement) := o -> (w, v) -> (
-    if not weakCompare(w, v, o) then (
-	error "weakInterval: Expected the first group element to be less than or equal to the
-	second in weak order."
-	);
-    W := group w;
-    w = wordToGroup(normalForm w, W);
-    v = wordToGroup(normalForm v, W);
-    poset(apply(subwords(w, v), swd -> wordToGroup(swd, W) ), bruhatCompare)	    
-    )
-
-
------------------------------------------------------------------
-
-weakLattice = method(Options => {Left => false})
-
-weakLattice CoxeterGroup := Poset => W -> poset(groupElements W, weakCompare)
 
 
 -- ENUMERATION

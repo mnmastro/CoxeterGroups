@@ -96,9 +96,6 @@ export {
     "AllReflections",	     	  -- option, ??
     "Facets",	     	     	  -- option, ??
     
-    "bruhatCompare",	    	  -- documented
-    "bruhatInterval",	     	  -- ??
-    "bruhatPoset",    	      	  -- documented
     "cartanMatrix",    	       	  -- documented
     "cosetEquals",    	      	  -- ??
     "coxeterGroup",    	       	  -- documented
@@ -137,9 +134,6 @@ export {
     "subgroup",	       	       	  -- ??
     "symmetricGroup",    	  -- documented
     "tableau",	      	      	  -- ??
-    "weakCompare",    	      	  -- ??
-    "weakInterval",    	       	  -- ??
-    "weakLattice",    	      	  -- ??
     "weights",	     	     	  -- ??
    
 -- ToddCoxeter.m2
@@ -172,6 +166,16 @@ export {
     -- target	     	     	  -- overloaded, ??
     "targetValues",	     	  -- ??
 
+-- Bruhat.m2
+    "UpperInterval",		  -- option, ??
+    
+    "bruhatCompare",	    	  -- documented
+    "bruhatInterval",	     	  -- ??
+    "bruhatPoset",    	      	  -- documented
+    "hasseDiagram'",		  -- ??
+    "weakCompare",    	      	  -- ??
+    "weakInterval",    	       	  -- ??
+    "weakLattice",    	      	  -- ??    
     
 -- CKVComplex.m2
     -- graph	    	    	  -- overloaded, ??
@@ -191,6 +195,7 @@ load "./CoxeterGroups/Groups.m2"
 load "./CoxeterGroups/CoxeterSystems.m2"
 load "./CoxeterGroups/ToddCoxeter.m2"
 load "./CoxeterGroups/GroupMaps.m2"
+load "./CoxeterGroups/Bruhat.m2"
 load "./CoxeterGroups/CKVComplex.m2"
 
 
@@ -202,6 +207,7 @@ load "./CoxeterGroups/Doc/GroupsDoc.m2"
 load "./CoxeterGroups/Doc/CoxeterSystemsDoc.m2"
 load "./CoxeterGroups/Doc/ToddCoxeterDoc.m2"
 load "./CoxeterGroups/Doc/GroupMapsDoc.m2"
+load "./CoxeterGroups/Doc/BruhatDoc.m2"
 
 undocumented {
     (net, Coset),
